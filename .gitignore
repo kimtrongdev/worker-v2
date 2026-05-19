@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Browser profiles (user data)
+browser-profiles/
+browser-profiles2
+browser-profiles-safari/
+
+# Cookie state tracking
+.cookie-state/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+.task-uploads/
+
+# Screenshots & captures
+screenshots/
+captures/
+/config.workers.js

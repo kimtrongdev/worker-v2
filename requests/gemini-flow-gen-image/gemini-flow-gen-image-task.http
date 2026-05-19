@@ -1,0 +1,96 @@
+@baseUrl = http://localhost:9000
+@taskId = REPLACE_TASK_ID
+
+### ============================================================
+### 1) Create task - text-to-image (NARWHAL / NanoBanana2)
+### ============================================================
+POST {{baseUrl}}/api/create-task
+Content-Type: application/json
+
+{
+  "type": "gemini-flow-gen-image",
+  "data": {
+    "prompt": "A cute cat wearing a tiny hat, digital art style",
+    "aspectRatio": "3:4",
+    "model": "NARWHAL",
+    "numberOfImages": 1
+  }
+}
+
+### ============================================================
+### 2) Create task - generate 4 landscape images (NARWHAL)
+### ============================================================
+POST {{baseUrl}}/api/create-task
+Content-Type: application/json
+
+{
+  "type": "gemini-flow-gen-image",
+  "data": {
+    "prompt": "A futuristic city skyline at sunset with flying cars",
+    "aspectRatio": "16:9",
+    "model": "NARWHAL",
+    "numberOfImages": 4,
+    "seed": 10001
+  }
+}
+
+### ============================================================
+### 3) Create task - GEM_PIX_2 (NanoBananaPro), square
+### ============================================================
+POST {{baseUrl}}/api/create-task
+Content-Type: application/json
+
+{
+  "type": "gemini-flow-gen-image",
+  "data": {
+    "prompt": "A minimalist logo design for a coffee shop, flat vector style",
+    "aspectRatio": "1:1",
+    "model": "GEM_PIX_2",
+    "numberOfImages": 1
+  }
+}
+
+### ============================================================
+### 4) Create task - reference image (base64) → portrait
+### ============================================================
+POST {{baseUrl}}/api/create-task
+Content-Type: application/json
+
+{
+  "type": "gemini-flow-gen-image",
+  "data": {
+    "prompt": "Transform this image into anime style",
+    "aspectRatio": "9:16",
+    "model": "NARWHAL",
+    "numberOfImages": 1,
+    "referenceImages": [
+      {
+        "base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
+      }
+    ]
+  }
+}
+
+### ============================================================
+### 5) Create task - reference image by URL
+### ============================================================
+POST {{baseUrl}}/api/create-task
+Content-Type: application/json
+
+{
+  "type": "gemini-flow-gen-image",
+  "data": {
+    "prompt": "Same subject but in a snowy forest",
+    "aspectRatio": "3:4",
+    "model": "NARWHAL",
+    "numberOfImages": 2,
+    "referenceImages": [
+      "https://example.com/reference.jpg"
+    ]
+  }
+}
+
+### ============================================================
+### Check task (returns image URLs once status === 'completed')
+### ============================================================
+GET {{baseUrl}}/api/check-task/{{taskId}}

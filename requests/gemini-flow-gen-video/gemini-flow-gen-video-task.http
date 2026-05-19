@@ -1,0 +1,74 @@
+@baseUrl = http://localhost:9000
+@taskId = 1ce25fb0-555c-4a05-9c55-cd4820309624
+
+### Create task - text to video
+POST {{baseUrl}}/api/create-task
+Content-Type: application/json
+
+{
+  "type": "gemini-flow-gen-video",
+  "data": {
+    "prompt": "video thiên nhiên",
+    "aspectRatio": "9:16",
+    "imageReferenceType": "simple",
+    "model": "lite_low_priority",
+    "quantity": 1
+  }
+}
+
+### Create task - frames with base64 images
+POST {{baseUrl}}/api/create-task
+Content-Type: application/json
+
+{
+  "type": "gemini-flow-gen-video",
+  "data": {
+    "prompt": "2 bao phân biến hình",
+    "aspectRatio": "9:16",
+    "imageReferenceType": "frames",
+    "model": "lite_low_priority",
+    "quantity": 1,
+    "firstImage": {
+      "base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
+    },
+    "lastImage": {
+      "base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
+    },
+    "firstImageCropCoordinates": {
+      "top": 0,
+      "left": 0.21875,
+      "bottom": 1,
+      "right": 0.78125
+    },
+    "lastImageCropCoordinates": {
+      "top": 0,
+      "left": 0.21875,
+      "bottom": 1,
+      "right": 0.78125
+    }
+  }
+}
+
+### Create task - ingredients with reference images
+POST {{baseUrl}}/api/create-task
+Content-Type: application/json
+
+{
+  "type": "gemini-flow-gen-video",
+  "data": {
+    "prompt": "Create a product video using the subject and style references",
+    "aspectRatio": "9:16",
+    "imageReferenceType": "ingredients",
+    "model": "lite_low_priority",
+    "quantity": 1,
+    "referenceImages": [
+      {
+        "base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
+      }
+    ]
+  }
+}
+
+### Check task
+GET {{baseUrl}}/api/check-task/{{taskId}}
+
