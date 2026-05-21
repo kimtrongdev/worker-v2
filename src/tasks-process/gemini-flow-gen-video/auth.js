@@ -121,6 +121,24 @@ function resolveBufferedAuthToken() {
   return '';
 }
 
+/**
+ * Same as resolveBufferedAuthToken but returns { token, email } for tracing.
+ */
+function resolveBufferedAuthTokenWithMeta() {
+  if (!global.workerManager || typeof global.workerManager.getToken !== 'function') {
+    return { token: '', email: '' };
+  }
+
+  for (const bufferKey of resolveVeo3TokenBufferKeys()) {
+    const entry = global.workerManager.getToken(bufferKey, { full: true });
+    if (!entry) continue;
+    const token = normalizeTokenValue(entry);
+    if (token) return { token, email: entry.email || '' };
+  }
+
+  return { token: '', email: '' };
+}
+
 async function dispatchAndWaitAuthTokenTask({ timeoutMs = 60000 } = {}, logger = null) {
   const log = (...args) => (logger ? logger.log('auth.dispatch', ...args) : null);
   const warn = (...args) => (logger ? logger.warn('auth.dispatch', ...args) : null);
@@ -190,13 +208,13 @@ async function acquireAuthToken(data = {}, { timeoutMs, logger = null } = {}) {
   const direct = trimToString(data.authToken) || trimToString(data.token);
   if (direct) {
     log('Using auth token from data', { authToken: redactSecret(direct) });
-    return { authToken: direct, projectId, cookie };
+    return { authToken: direct, projectId, cookie, authTokenSource: 'data', authTokenEmail: '' };
   }
 
-  const buffered = resolveBufferedAuthToken();
-  if (buffered) {
-    log('Using auth token from worker token buffer', { authToken: redactSecret(buffered) });
-    return { authToken: buffered, projectId, cookie };
+  const bufferedMeta = resolveBufferedAuthTokenWithMeta();
+  if (bufferedMeta.token) {
+    log('Using auth token from worker token buffer', { authToken: redactSecret(bufferedMeta.token), email: bufferedMeta.email });
+    return { authToken: bufferedMeta.token, projectId, cookie, authTokenSource: 'pool', authTokenEmail: bufferedMeta.email };
   }
 
   const fromEnv = readEnv(
@@ -209,7 +227,7 @@ async function acquireAuthToken(data = {}, { timeoutMs, logger = null } = {}) {
   );
   if (fromEnv) {
     log('Using auth token from env', { authToken: redactSecret(fromEnv) });
-    return { authToken: fromEnv, projectId, cookie };
+    return { authToken: fromEnv, projectId, cookie, authTokenSource: 'env', authTokenEmail: '' };
   }
 
   throw new Error('No Gemini Flow auth token available. Wait for the veo3-token pool to collect a token, set GEMINI_FLOW_AUTH_TOKEN, or pass data.authToken.');
@@ -377,6 +395,7 @@ module.exports = {
   resolveAuthFromEnv,
   acquireAuthToken,
   resolveBufferedAuthToken,
+  resolveBufferedAuthTokenWithMeta,
   resolveRecaptchaToken,
   resolveRecaptchaTokenSync,
   acquireRecaptchaToken,

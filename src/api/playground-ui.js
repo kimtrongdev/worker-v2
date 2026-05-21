@@ -303,7 +303,6 @@ function renderPlaygroundPage() {
           <select id="videoAspectRatio">
             <option value="16:9">16:9 (landscape)</option>
             <option value="9:16">9:16 (portrait)</option>
-            <option value="1:1">1:1 (square)</option>
           </select>
         </div>
         <div class="field">
@@ -317,10 +316,20 @@ function renderPlaygroundPage() {
         <div class="field">
           <label for="videoModel">Model</label>
           <select id="videoModel">
+            <option value="lite_low_priority">lite low priority</option>
+            <option value="omni_flash">Omni Flash</option>
             <option value="fast">fast</option>
             <option value="quality">quality (HQ)</option>
             <option value="lite">lite</option>
-            <option value="lite_low_priority">lite low priority</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="videoDuration">Duration</label>
+          <select id="videoDuration">
+            <option value="4">4s</option>
+            <option value="6">6s</option>
+            <option value="8" selected>8s</option>
+            <option value="10">10s</option>
           </select>
         </div>
         <div class="field">
@@ -569,6 +578,7 @@ function renderPlaygroundPage() {
         aspectRatio: $('videoAspectRatio').value,
         imageReferenceType: mode,
         model: $('videoModel').value,
+        duration: Number($('videoDuration').value) || 8,
         quantity: Number($('videoQuantity').value) || 1,
       };
 
@@ -585,7 +595,8 @@ function renderPlaygroundPage() {
       $('videoQuantity').value = '1';
       $('videoAspectRatio').value = '16:9';
       $('videoImageReferenceType').value = 'simple';
-      $('videoModel').value = 'fast';
+      $('videoModel').value = 'lite_low_priority';
+      $('videoDuration').value = '8';
       Object.keys(videoStore).forEach((key) => delete videoStore[key]);
       renderVideoSlots();
       setStatus('Đã reset form video.');
@@ -740,7 +751,11 @@ function renderPlaygroundPage() {
       } else {
         metaSummary = escapeHtml(entry.payload.imageReferenceType || 'simple') + ' · ' + escapeHtml(entry.payload.model || 'fast');
       }
-      meta.innerHTML = escapeHtml(taskIdText) + ' · ' + metaSummary + ' · ' + elapsed + 's';
+      var authEmail = '';
+      if (entry.raw && entry.raw.result && entry.raw.result.authTokenEmail) {
+        authEmail = ' · 🔑 ' + escapeHtml(entry.raw.result.authTokenEmail);
+      }
+      meta.innerHTML = escapeHtml(taskIdText) + ' · ' + metaSummary + ' · ' + elapsed + 's' + authEmail;
 
       const spinner = (status === 'completed' || status === 'failed') ? '' : '<span class="spinner"></span>';
       state.innerHTML = spinner + '<span>' + escapeHtml(entry.message || status) + '</span>';
@@ -873,6 +888,21 @@ function renderPlaygroundPage() {
     }
 
     // ===== Wire events =====
+    function updateDurationOptions() {
+      const model = $('videoModel').value;
+      const durationSelect = $('videoDuration');
+      const opt10 = durationSelect.querySelector('option[value="10"]');
+      if (!opt10) return;
+      // lite_low_priority does not support 10s duration
+      const isLiteLow = model === 'lite_low_priority';
+      opt10.disabled = isLiteLow;
+      opt10.style.display = isLiteLow ? 'none' : '';
+      if (isLiteLow && durationSelect.value === '10') {
+        durationSelect.value = '8';
+      }
+    }
+
+    $('videoModel').addEventListener('change', updateDurationOptions);
     $('videoImageReferenceType').addEventListener('change', renderVideoSlots);
     $('videoSubmitBtn').addEventListener('click', () => submitTask({
       kind: 'video',
@@ -892,6 +922,7 @@ function renderPlaygroundPage() {
 
     renderVideoSlots();
     renderImageReferenceSlots();
+    updateDurationOptions();
   </script>
 </body>
 </html>`;

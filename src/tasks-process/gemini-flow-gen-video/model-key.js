@@ -17,6 +17,7 @@ function resolveVideoModelKey({
   aspectRatio,
   model,
   resolution,
+  duration,
   videoModelKeyOverride,
 }) {
   const override = trimToString(videoModelKeyOverride);
@@ -24,6 +25,13 @@ function resolveVideoModelKey({
 
   const aspectShort = ASPECT_SHORT_MAP[aspectRatio] || 'portrait';
   const normalizedModel = String(model || '').trim().toLowerCase();
+  const durationSeconds = Number.parseInt(
+    String(duration ?? '').trim(),
+    10,
+  );
+  const isOmniFlashModel = normalizedModel.includes('omni_flash')
+    || normalizedModel.includes('omniflash')
+    || normalizedModel.includes('omni-flash');
   const isLowPriorityLiteModel = normalizedModel.includes('lite_low_priority')
     || normalizedModel.includes('lite-low-priority')
     || normalizedModel.includes('t2v_lite_low_priority')
@@ -59,8 +67,22 @@ function resolveVideoModelKey({
   }
 
   const isPortrait = aspectShort === 'portrait' ? '_portrait' : '';
+  if (isOmniFlashModel) {
+    const omniFlashDurationMap = {
+      4: 'abra_t2v_4s',
+      6: 'abra_t2v_6s',
+      8: 'abra_t2v_8s',
+      10: 'abra_t2v_10s',
+    };
+    return omniFlashDurationMap[durationSeconds] || omniFlashDurationMap[8];
+  }
   if (isLowPriorityLiteModel) {
-    return 'veo_3_1_t2v_lite_low_priority';
+    const liteLowDurationMap = {
+      4: 'veo_3_1_t2v_lite_4s_low_priority',
+      6: 'veo_3_1_t2v_lite_6s_low_priority',
+      8: 'veo_3_1_t2v_lite_low_priority',
+    };
+    return liteLowDurationMap[durationSeconds] || liteLowDurationMap[8];
   }
   if (isExplicitLiteModel) {
     return 'veo_3_1_t2v_lite';

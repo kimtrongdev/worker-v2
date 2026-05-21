@@ -12,6 +12,23 @@ Content-Type: application/json
     "aspectRatio": "9:16",
     "imageReferenceType": "simple",
     "model": "lite_low_priority",
+    "duration": 8,
+    "quantity": 1
+  }
+}
+
+### Create task - Omni Flash text to video
+POST {{baseUrl}}/api/create-task
+Content-Type: application/json
+
+{
+  "type": "gemini-flow-gen-video",
+  "data": {
+    "prompt": "video thiên nhiên",
+    "aspectRatio": "9:16",
+    "imageReferenceType": "simple",
+    "model": "omni_flash",
+    "duration": 10,
     "quantity": 1
   }
 }
@@ -71,4 +88,3 @@ Content-Type: application/json
 
 ### Check task
 GET {{baseUrl}}/api/check-task/{{taskId}}
-

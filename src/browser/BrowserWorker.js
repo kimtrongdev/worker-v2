@@ -583,6 +583,7 @@ class BrowserWorker {
               const tokenEntry = {
                 type,
                 token,
+                email: this.email,
                 expiresAt: Date.now() + ttl,
                 createdAt: Date.now()
               };
@@ -678,6 +679,7 @@ class BrowserWorker {
           type: bufferKey,
           group,
           token,
+          email: this.email,
           expiresAt: Date.now() + ttl,
           createdAt: Date.now(),
         });

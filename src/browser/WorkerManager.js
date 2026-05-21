@@ -445,21 +445,34 @@ class WorkerManager {
   }
 
   /**
-   * Get a token from buffer if available
+   * Get a token from buffer if available.
+   * Returns the token string by default.
+   * Pass options.full = true to get the full entry { token, email, type, ... }.
    */
   getToken(type = 'video', options = {}) {
     const now = Date.now();
-    // Find first non-expired token of matching type
-    const index = this.tokenBuffer.findIndex(t => t.type === type && t.expiresAt > now);
-
-    if (index !== -1) {
-      const shouldKeep = options.keep === true || type === GROUPS.VEO3_TOKEN || type === 'veo3-token';
-      const tokenEntry = shouldKeep ? this.tokenBuffer[index] : this.tokenBuffer.splice(index, 1)[0];
-      console.log(`📤 [Manager] Serving ${type} token${shouldKeep ? ' (kept)' : ''}: ${formatTokenPreview(tokenEntry.token)}`);
-      return tokenEntry.token;
+    // Find all non-expired tokens of matching type
+    const validIndices = [];
+    for (let i = 0; i < this.tokenBuffer.length; i++) {
+      if (this.tokenBuffer[i].type === type && this.tokenBuffer[i].expiresAt > now) {
+        validIndices.push(i);
+      }
     }
-    // console.log(`⚠️ [Manager] No ${type} token available`);
-    return null;
+
+    if (validIndices.length === 0) {
+      return null;
+    }
+
+    // Pick a random token from valid entries for load distribution
+    const randomIdx = validIndices[Math.floor(Math.random() * validIndices.length)];
+    const shouldKeep = options.keep === true || type === GROUPS.VEO3_TOKEN || type === 'veo3-token';
+    const tokenEntry = shouldKeep ? this.tokenBuffer[randomIdx] : this.tokenBuffer.splice(randomIdx, 1)[0];
+    console.log(`📤 [Manager] Serving ${type} token${shouldKeep ? ' (kept)' : ''} [${validIndices.length} available] from ${tokenEntry.email || 'unknown'}: ${formatTokenPreview(tokenEntry.token)}`);
+
+    if (options.full) {
+      return tokenEntry;
+    }
+    return tokenEntry.token;
   }
 
   /**

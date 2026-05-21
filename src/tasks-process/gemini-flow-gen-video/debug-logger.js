@@ -50,6 +50,7 @@ function summarizeInputPayload(data = {}) {
     aspectRatio: data.aspectRatio,
     quantity: data.quantity,
     model: data.model,
+    duration: data.duration,
     resolution: data.resolution,
     imageReferenceType: data.imageReferenceType,
     seed: data.seed,

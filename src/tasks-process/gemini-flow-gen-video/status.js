@@ -106,6 +106,19 @@ function buildVideoStatusMediaDetail(media = {}) {
   return detail;
 }
 
+function buildFailureDebugDetail(detail = {}) {
+  const raw = detail?.raw || {};
+  return {
+    operation_id: detail?.operation_id || null,
+    media_id: detail?.media_id || null,
+    workflow_id: detail?.workflow_id || null,
+    status: detail?.status || null,
+    error_message: detail?.error_message || null,
+    raw_error: raw?.error || raw?.mediaMetadata?.mediaStatus?.error || null,
+    raw_preview: shortPreview(raw, 1500),
+  };
+}
+
 async function checkVideoStatus({ videoIds, authToken, signal, logger = null }) {
   const log = (...args) => (logger ? logger.log('status.poll', ...args) : null);
   const errorLog = (...args) => (logger ? logger.error('status.poll', ...args) : null);
@@ -141,15 +154,25 @@ async function checkVideoStatus({ videoIds, authToken, signal, logger = null }) 
   const responseText = await readResponseSafely(response);
   if (!response.ok) {
     errorLog(`HTTP ${response.status} after ${Date.now() - startedAt}ms`, {
-      bodyPreview: shortPreview(responseText, 600),
+      videoIds: requested,
+      bodyPreview: shortPreview(responseText, 2000),
     });
-    throw new Error(`checkVideoStatus failed: ${response.status} - ${responseText.slice(0, 300)}`);
+    const statusError = new Error(`checkVideoStatus failed: ${response.status} - ${responseText.slice(0, 1000)}`);
+    statusError.statusCode = response.status;
+    statusError.responseText = responseText;
+    statusError.videoIds = requested;
+    throw statusError;
   }
 
   let data = {};
   try {
     data = responseText ? JSON.parse(responseText) : {};
-  } catch (_error) {
+  } catch (parseError) {
+    errorLog('JSON parse error', {
+      error: parseError?.message || String(parseError),
+      bodyPreview: shortPreview(responseText, 2000),
+      videoIds: requested,
+    });
     data = {};
   }
 
@@ -173,6 +196,14 @@ async function checkVideoStatus({ videoIds, authToken, signal, logger = null }) 
     failed,
     pending: Math.max(0, details.length - successful - failed),
   });
+
+  if (failed > 0) {
+    errorLog('Failed video status details', {
+      details: details
+        .filter((item) => item?.is_failed)
+        .map(buildFailureDebugDetail),
+    });
+  }
 
   return {
     videos,

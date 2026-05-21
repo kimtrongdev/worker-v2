@@ -91,7 +91,8 @@ function extractSubmissionArtifacts(responseData = {}) {
  *   - prompt (required)
  *   - aspectRatio: '16:9' | '9:16' | '1:1' (default '16:9')
  *   - quantity: number of videos to request (default 1)
- *   - model: 'fast' | 'quality' (default 'fast')
+ *   - model: 'lite_low_priority' | 'omni_flash' | 'fast' | 'quality' (default 'lite_low_priority')
+ *   - duration: 4 | 6 | 8 | 10 seconds (10s only for omni_flash)
  *   - resolution: '720p' | '1080p' (default '720p')
  *   - imageReferenceType: 'simple' | 'frames' | 'ingredients'
  *   - firstImage / lastImage: URL or base64 (frames mode)
@@ -107,7 +108,8 @@ async function runGeminiFlowGenVideoTask(data = {}) {
     prompt,
     aspectRatio = '16:9',
     quantity = 1,
-    model = 'fast',
+    model = 'lite_low_priority',
+    duration = 8,
     resolution = '720p',
     imageReferenceType: rawImageReferenceType = 'simple',
     videoModelKey: videoModelKeyOverride = '',
@@ -135,7 +137,7 @@ async function runGeminiFlowGenVideoTask(data = {}) {
   const logger = createDebugLogger(data);
   logger.log('start', 'runGeminiFlowGenVideoTask invoked', summarizeInputPayload(data));
 
-  const { authToken, projectId, cookie } = await acquireAuthToken(data, { logger });
+  const { authToken, projectId, cookie, authTokenSource, authTokenEmail } = await acquireAuthToken(data, { logger });
   data.authToken = authToken;
   data.projectId = data.projectId || projectId;
   // Default to fresh recaptcha. Token reuse is one of the top causes of
@@ -194,6 +196,7 @@ async function runGeminiFlowGenVideoTask(data = {}) {
     aspectRatio,
     model,
     resolution,
+    duration,
     videoModelKeyOverride,
   });
   const acceptsEndImage = modelKeyAcceptsEndImage(videoModelKey);
@@ -207,6 +210,7 @@ async function runGeminiFlowGenVideoTask(data = {}) {
     aspectRatio,
     videoAspectRatio,
     model,
+    duration,
     resolution,
     videoModelKey,
     apiEndpoint,
@@ -353,6 +357,8 @@ async function runGeminiFlowGenVideoTask(data = {}) {
     imageReferenceType,
     aspectRatio,
     quantity: safeQuantity,
+    authTokenSource: authTokenSource || '',
+    authTokenEmail: authTokenEmail || '',
     videoIds,
     operationIds: submissionArtifacts.operationIds,
     mediaIds: submissionArtifacts.mediaIds,
